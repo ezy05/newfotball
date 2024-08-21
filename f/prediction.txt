@@ -1,0 +1,12 @@
+Both Teams To Score
+1 - Home team win
+2 - Away team win
+X - Draw
+2+ Goals
+3+ Goals
+Both Teams To Score OR 3+ Goals
+Both Teams To Score AND 3+ Goals
+1X - Home team win or Draw
+X2 - Away team win or Draw
+1+ Goal First Halftime
+7+ Corners

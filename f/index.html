@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Betting App</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+        }
+
+        #result, #history {
+            font-size: 20px;
+            font-weight: bold;
+            color: yellow;
+        }
+
+        .Btn {
+            width: 140px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, #77530a, #ffd277, #77530a, #77530a, #ffd277, #77530a);
+            background-size: 250%;
+            background-position: left;
+            color: white;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition-duration: 1s;
+            overflow: hidden;
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .Btn::before {
+            position: absolute;
+            content: "";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 97%;
+            height: 90%;
+            border-radius: 8px;
+            transition-duration: 1s;
+            background-color: rgba(0, 0, 0, 0.842);
+            background-size: 200%;
+            z-index: 0;
+        }
+
+        .Btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .Btn:hover {
+            background-position: right;
+            transition-duration: 1s;
+        }
+
+        .Btn:hover::before {
+            background-position: right;
+            transition-duration: 1s;
+        }
+
+        .Btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="welcome-page" class="page active">
+        <img src="welcome.png" class="background" alt="Welcome Background">
+        <div class="content center">
+            <h1>Welcome to AI Betting!</h1>
+            <button class="Btn" onclick="showMainPage()"><span>Play Now</span></button>
+        </div>
+    </div>
+
+    <div id="main-page" class="page hidden">
+        <video src="app.mp4" class="background" autoplay muted loop></video>
+        <div class="content center">
+            <img src="logo.png" class="logo" alt="App Logo">
+            <p>Available Leagues:<br>
+                - Romania<br>
+                - France<br>
+                - Italy<br>
+                - England<br>
+                - Germany<br>
+                - Spain<br>
+                - AND MORE...</p>
+            <input type="text" id="team1" placeholder="Home team">
+            <input type="text" id="team2" placeholder="Away team">
+            <button class="Btn" onclick="predict()"><span>Predict</span></button>
+            <p id="result">Prediction result will appear here</p>
+            <button class="Btn" onclick="showHistoryPage()"><span>View History</span></button>
+        </div>
+    </div>
+
+    <div id="history-page" class="page hidden">
+        <video src="app.mp4" class="background" autoplay muted loop></video>
+        <div class="content center">
+            <button class="Btn" onclick="deleteHistory()"><span>Delete History</span></button>
+            <button class="Btn" onclick="showMainPage()"><span>Back</span></button>
+            <pre id="history"></pre>
+        </div>
+    </div>
+
+    <script>
+        const predictions = [
+            "Both Teams To Score",
+            "1 - Home team win",
+            "2 - Away team win",
+            "X - Draw",
+            "2+ Goals",
+            "3+ Goals",
+            "Both Teams To Score OR 3+ Goals",
+            "Both Teams To Score AND 3+ Goals",
+            "1X - Home team win or Draw",
+            "X2 - Away team win or Draw",
+            "1+ Goal First Halftime",
+            "7+ Corners"
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear local storage for a fresh start only if history and cache don't already exist
+            if (!localStorage.getItem('history') && !localStorage.getItem('predictionCache')) {
+                localStorage.removeItem('history');
+                localStorage.removeItem('predictionCache');
+            }
+
+            showWelcomePage();
+        });
+
+        function showWelcomePage() {
+            document.getElementById('welcome-page').classList.add('active');
+            document.getElementById('main-page').classList.remove('active');
+            document.getElementById('history-page').classList.remove('active');
+        }
+
+        function showMainPage() {
+            document.getElementById('welcome-page').classList.remove('active');
+            document.getElementById('main-page').classList.add('active');
+            document.getElementById('history-page').classList.remove('active');
+        }
+
+        function showHistoryPage() {
+            document.getElementById('welcome-page').classList.remove('active');
+            document.getElementById('main-page').classList.remove('active');
+            document.getElementById('history-page').classList.add('active');
+            loadHistory();
+        }
+
+        function predict() {
+            let team1 = document.getElementById('team1').value.trim().toLowerCase();
+            let team2 = document.getElementById('team2').value.trim().toLowerCase();
+            let resultElement = document.getElementById('result');
+
+            if (!team1 || !team2) {
+                resultElement.textContent = 'Error: Please enter both teams.';
+                return;
+            }
+
+            let matchKey = `${team1}-${team2}`;
+            let prediction;
+
+            let predictionCache = JSON.parse(localStorage.getItem('predictionCache')) || {};
+
+            if (predictionCache[matchKey]) {
+                prediction = predictionCache[matchKey];
+            } else {
+                prediction = predictions[Math.floor(Math.random() * predictions.length)];
+                predictionCache[matchKey] = prediction;
+                localStorage.setItem('predictionCache', JSON.stringify(predictionCache));
+            }
+
+            resultElement.textContent = `Prediction for ${team1.toUpperCase()} vs ${team2.toUpperCase()} -> ${prediction}`;
+            saveResult(team1, team2, prediction);
+        }
+
+        function saveResult(team1, team2, prediction) {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history.push(`${team1.toUpperCase()} vs ${team2.toUpperCase()}: ${prediction}`);
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        function loadHistory() {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            document.getElementById('history').textContent = history.length > 0 ? history.join('\n') : 'No history available.';
+        }
+
+        function deleteHistory() {
+            localStorage.removeItem('history');
+            document.getElementById('history').textContent = 'History deleted.';
+        }
+    </script>
+</body>
+
+</html>
